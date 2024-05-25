@@ -1,0 +1,5 @@
+# Zig directories
+zig-cache/
+zig-out/
+
+
