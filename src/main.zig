@@ -1,5 +1,8 @@
 const std = @import("std");
 
+const color = @import("color.zig");
+const glm = @import("glm.zig");
+
 pub fn main() !void {
     // Image
     const image_width = 256;
@@ -25,15 +28,12 @@ pub fn main() !void {
         std.debug.print("Scanlines remaining {}\n", .{scanlines_remaining});
 
         for (0..image_width) |i| {
-            const r: f64 = (@as(f64, @floatFromInt(i)) / (image_width - 1));
-            const g: f64 = (@as(f64, @floatFromInt(j)) / (image_height - 1));
-            const b: f64 = 0.0;
+            const r: f32 = (@as(f32, @floatFromInt(i)) / (image_width - 1));
+            const g: f32 = (@as(f32, @floatFromInt(j)) / (image_height - 1));
+            const b: f32 = 0.0;
 
-            const ir: i32 = @intFromFloat(255.999 * r);
-            const ig: i32 = @intFromFloat(255.999 * g);
-            const ib: i32 = @intFromFloat(255.999 * b);
-
-            try file_writer.print("{} {} {}\n", .{ ir, ig, ib });
+            const pixel_color = glm.vec3(r, g, b);
+            try color.writeColor(&file_writer, pixel_color);
         }
     }
 
