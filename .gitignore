@@ -2,4 +2,5 @@
 zig-cache/
 zig-out/
 
-
+# Output Image file
+*.ppm
