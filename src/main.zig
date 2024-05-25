@@ -1,24 +1,55 @@
 const std = @import("std");
 
 pub fn main() !void {
-    // Prints to stderr (it's a shortcut based on `std.io.getStdErr()`)
-    std.debug.print("All your {s} are belong to us.\n", .{"codebase"});
+    // Image
+    const image_width = 256;
+    const image_height = 256;
 
-    // stdout is for the actual output of your application, for example if you
-    // are implementing gzip, then only the compressed bytes should be sent to
-    // stdout, not any debugging messages.
-    const stdout_file = std.io.getStdOut().writer();
-    var bw = std.io.bufferedWriter(stdout_file);
-    const stdout = bw.writer();
+    // Render
+    const file_name = "image.ppm";
 
-    try stdout.print("Run `zig build test` to run the tests.\n", .{});
+    // Open the file, or create it if it does not exist
+    var file = try openOrCreateFile(file_name);
+    defer file.close();
 
-    try bw.flush(); // don't forget to flush!
+    const file_stream = file.writer();
+    var bw = std.io.bufferedWriter(file_stream);
+
+    const file_writer = bw.writer();
+
+    try file_writer.print("P3\n{} {}\n255\n", .{ image_width, image_height });
+
+    for (0..image_height) |j| {
+        // Print progress, pretty basic and not very elegant.
+        const scanlines_remaining = (image_height - j);
+        std.debug.print("Scanlines remaining {}\n", .{scanlines_remaining});
+
+        for (0..image_width) |i| {
+            const r: f64 = (@as(f64, @floatFromInt(i)) / (image_width - 1));
+            const g: f64 = (@as(f64, @floatFromInt(j)) / (image_height - 1));
+            const b: f64 = 0.0;
+
+            const ir: i32 = @intFromFloat(255.999 * r);
+            const ig: i32 = @intFromFloat(255.999 * g);
+            const ib: i32 = @intFromFloat(255.999 * b);
+
+            try file_writer.print("{} {} {}\n", .{ ir, ig, ib });
+        }
+    }
+
+    try bw.flush();
 }
 
-test "simple test" {
-    var list = std.ArrayList(i32).init(std.testing.allocator);
-    defer list.deinit(); // try commenting this out and see if zig detects the memory leak!
-    try list.append(42);
-    try std.testing.expectEqual(@as(i32, 42), list.pop());
+fn openOrCreateFile(file_name: []const u8) !std.fs.File {
+    const fs = std.fs.cwd();
+    const result = fs.openFile(file_name, .{ .mode = .read_write });
+    if (result) |file| {
+        return file;
+    } else |err| {
+        switch (err) {
+            // If the file does not exist, create it
+            error.FileNotFound => return fs.createFile(file_name, .{}),
+            else => return err,
+        }
+    }
 }
