@@ -4,7 +4,21 @@ const color = @import("color.zig");
 const glm = @import("glm.zig");
 const ray = @import("ray.zig");
 
+fn hitSphere(center: glm.Vec3, radius: f32, r: ray.Ray) bool {
+    const oc = center.sub(r.origin());
+
+    const a = r.direction().dot(r.direction());
+    const b = -2.0 * r.direction().dot(oc);
+    const c = oc.dot(oc) - radius * radius;
+    const discriminant = b * b - 4 * a * c;
+    return discriminant >= 0;
+}
+
 fn rayColor(r: ray.Ray) color.Color {
+    if (hitSphere(glm.vec3(0.0, 0.0, 1.0), 0.5, r)) {
+        return glm.vec3(1.0, 0.0, 0.0);
+    }
+
     const unit_direction = r.direction().normalize();
     const a = 0.5 * (unit_direction.vals[1] + 1.0);
     return glm.Vec3.ones().mulScalar(1.0 - a).add(glm.vec3(0.5, 0.7, 1.0).mulScalar(a));
@@ -35,8 +49,6 @@ pub fn main() !void {
 
     // Calculate the position of the upper left pixel
     const viewport_upper_left = camera_center.sub(glm.vec3(0.0, 0.0, focal_length)).sub(viewport_u.divScalar(2.0)).sub(viewport_v.divScalar(2.0));
-
-    //const pixe00_loc = viewport_upper_left + 0.5 * (pixel_delta_u + pixel_delta_v);
     const pixel00_loc = viewport_upper_left.add(pixel_delta_u.add(pixel_delta_v).mulScalar(0.5));
 
     // Render
